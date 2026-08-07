@@ -9,7 +9,7 @@ from google.colab import userdata
 #db_password = userdata.get('MONGO_PASSWORD')
 
 # Define connection string
-uri = "mongodb+srv://trun02052user:TESTRUN123@cluster0.vljbe5x.mongodb.net/?appName=Cluster0"
+
 
 # Establish connection
 client = pymongo.MongoClient(uri)
