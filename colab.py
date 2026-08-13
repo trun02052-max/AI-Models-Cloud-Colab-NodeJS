@@ -60,7 +60,7 @@ analytical_model, analytical_tokenizer = FastLanguageModel.from_pretrained(
 )
 FastLanguageModel.for_inference(analytical_model)
 
-print("\nDownloading/Loading Model 2: 1.5B Therapy Model...")
+print("\nDownloading/Loading Model 2: 1.5B Model...")
 second_smaller_model, second_tokenizer = FastLanguageModel.from_pretrained(
     model_name = "unsloth/DeepSeek-R1-Distill-Qwen-1.5B-bnb-4bit",
     max_seq_length = max_seq_length,
