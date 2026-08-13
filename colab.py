@@ -9,7 +9,7 @@ from google.colab import userdata
 #db_password = userdata.get('MONGO_PASSWORD')
 
 # Define connection string
-
+#add uri
 
 # Establish connection
 client = pymongo.MongoClient(uri)
@@ -61,13 +61,13 @@ analytical_model, analytical_tokenizer = FastLanguageModel.from_pretrained(
 FastLanguageModel.for_inference(analytical_model)
 
 print("\nDownloading/Loading Model 2: 1.5B Therapy Model...")
-therapy_model, therapy_tokenizer = FastLanguageModel.from_pretrained(
+second_smaller_model, second_tokenizer = FastLanguageModel.from_pretrained(
     model_name = "unsloth/DeepSeek-R1-Distill-Qwen-1.5B-bnb-4bit",
     max_seq_length = max_seq_length,
     dtype = dtype,
     load_in_4bit = load_in_4bit,
 )
-FastLanguageModel.for_inference(therapy_model)
+FastLanguageModel.for_inference(second_smaller_model)
 
 print("\n Both models are successfully saved into your Google Drive!")
 
@@ -77,7 +77,7 @@ def analytical(ain):
 #analysis_user_input = "If I have two lists in Python, each having elements corresponding to the other (at the same index). How do I sort one list and ensure that the other gets sorted in the same way?"
 
   inputs = analytical_tokenizer(
-      [f"<｜begin of sentence｜>User: {analytical_tokenizer}\n\nAssistant:"],
+      [f"<｜begin of sentence｜>User: {ain}\n\nAssistant:"],
       return_tensors = "pt"
   ).to("cuda")
 
@@ -85,25 +85,25 @@ def analytical(ain):
   outputs = analytical_model.generate(**inputs, max_new_tokens = 700)
   return analytical_tokenizer.decode(outputs[0], skip_special_tokens=True)
 
-therapy_system = (
+second_smaller_model = (
     "You are an objective AI counselor practicing Cognitive Behavioral Therapy. "
     "Do not flatter the user. Do not blindly take their side. Point out cognitive distortions "
     "and challenge unfair or toxic behaviors logically and gently."
-)
+) #example preprompt
 
-def therapy(the):
+def second(the):
 
-#therapy_user_input = ""
+
 
   # Compile context format
-  input = therapy_tokenizer(
-      [f"<｜begin of sentence｜>{therapy_system}\n\nUser: {therapy_user_input}\n\nAssistant:"],
+  input = second_tokenizer(
+      [f"<｜begin of sentence｜>{second_smaller_model}\n\nUser: {the}\n\nAssistant:"],
       return_tensors = "pt"
   ).to("cuda")
 
 # Generate response via the 1.5B Model
-  output = therapy_model.generate(**input, max_new_tokens = 512)
-  return (therapy_tokenizer.decode(output[0], skip_special_tokens=True))
+  output = second_smaller_model.generate(**input, max_new_tokens = 512)
+  return (second_tokenizer.decode(output[0], skip_special_tokens=True))
 
 # --- BLOCK 4: Automated Link Discovery & Auto-Shutdown ---
 
@@ -120,7 +120,7 @@ async def router_with_shutdown(websocket):
             if target_block == "analytical":
                 o = analytical(user_text)
             elif target_block == "gethelp":
-                o = therapy(user_text)
+                o = second(user_text)
             else:
                 o = "Error: Block not found"
 
@@ -136,19 +136,13 @@ async def router_with_shutdown(websocket):
         stop_event.set()
 
 # Authenticate and connect Ngrok
-!pip install websockets nest_asyncio pyngrok "pymongo[srv]"
+#set up ngrok 
 #tunnel = ngrok.connect(8765, "tcp")
 #clean_url = tunnel.public_url.replace("tcp://", "ws://")
 
 tunnel = ngrok.connect(8765, "http")
 clean_url = tunnel.public_url.replace("https://", "wss://")
 
-# Drop the dynamic URL directly into Google Drive
-#url_file_path = os.path.join(FOLDER_PATH, "live_colab_url.txt")
-#with open(url_file_path, "w") as f:
-   # f.write(clean_url)
-
-#print(f"🚀 Link published to Google Drive! Waiting for exactly ONE request...")
 #mongo
 db = client["links"]
 collection = db["links"]
